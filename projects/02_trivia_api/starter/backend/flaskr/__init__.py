@@ -1,10 +1,6 @@
-import os
-from flask import Flask, request, abort, jsonify
-from flask_sqlalchemy import SQLAlchemy
-from flask_cors import CORS
-import random
+from flask import Flask
 
-from models import setup_db, Question, Category
+from backend.flaskr.models import setup_db
 
 QUESTIONS_PER_PAGE = 10
 
@@ -12,7 +8,7 @@ def create_app(test_config=None):
   # create and configure the app
   app = Flask(__name__)
   setup_db(app)
-  
+
   '''
   @TODO: Set up CORS. Allow '*' for origins. Delete the sample route after completing the TODOs
   '''
