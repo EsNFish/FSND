@@ -21,7 +21,7 @@ def create_app(test_config=None):
         response.headers.add('Access-Control-Allow-Methods', 'GET,PATCH,POST,DELETE')
         return response
 
-    @app.route('/categories', methods=['GET']:q
+    @app.route('/categories', methods=['GET'])
     def get_categories():
         categories = Category.query.all()
         formatted_categories = {category.id: category.type for category in categories}
