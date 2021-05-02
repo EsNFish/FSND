@@ -12,7 +12,7 @@ def create_app(test_config=None):
     setup_db(app)
 
     # set up CORS
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    CORS(app, resources={r"*": {"origins": "*"}})
 
     # set up access control allow
     @app.after_request
@@ -21,10 +21,10 @@ def create_app(test_config=None):
         response.headers.add('Access-Control-Allow-Methods', 'GET,PATCH,POST,DELETE')
         return response
 
-    @app.route('/categories', methods=['GET'])
+    @app.route('/categories', methods=['GET']:q
     def get_categories():
         categories = Category.query.all()
-        formatted_categories = [category.format() for category in categories]
+        formatted_categories = {category.id: category.type for category in categories}
         return jsonify({
             'success': True,
             'categories': formatted_categories
