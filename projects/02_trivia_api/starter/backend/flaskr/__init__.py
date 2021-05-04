@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, abort
 from flask_cors import CORS
 
 from .models import setup_db, Category, Question
@@ -18,7 +18,7 @@ def paginate_questions(request, questions):
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
-    setup_db(app)
+    db = setup_db(app)
 
     # set up CORS
     CORS(app, resources={r"*": {"origins": "*"}})
@@ -37,7 +37,7 @@ def create_app(test_config=None):
         return jsonify({
             'success': True,
             'categories': formatted_categories
-        })
+        }), 200
 
     @app.route('/questions', methods=['GET'])
     def get_questions():
@@ -51,28 +51,22 @@ def create_app(test_config=None):
             'questions': formatted_questions,
             'total_questions': len(questions),
             'categories': formatted_categories
-        })
+        }), 200
 
-    '''
-  @TODO:
-  Create an endpoint to handle GET requests for questions, 
-  including pagination (every 10 questions). 
-  This endpoint should return a list of questions, 
-  number of total questions, current category, categories. 
+    @app.route('/questions/<delete_id>', methods=['DELETE'])
+    def delete_question(delete_id):
+        try:
+            Question.query.filter(Question.id == delete_id).delete()
+            db.session.commit()
+        except:
+            db.session.rollback()
+            abort(404)
 
-  TEST: At this point, when you start the application
-  you should see questions and categories generated,
-  ten questions per page and pagination at the bottom of the screen for three pages.
-  Clicking on the page numbers should update the questions. 
-  '''
+        db.session.close()
 
-    '''
-  @TODO: 
-  Create an endpoint to DELETE question using a question ID. 
-
-  TEST: When you click the trash icon next to a question, the question will be removed.
-  This removal will persist in the database and when you refresh the page. 
-  '''
+        return jsonify({
+            'success': True
+        }), 204
 
     '''
   @TODO: 
@@ -122,5 +116,12 @@ def create_app(test_config=None):
   Create error handlers for all expected errors 
   including 404 and 422. 
   '''
+    @app.errorhandler(404)
+    def unprocessable_entity(error):
+        return jsonify({
+            "success": False,
+            "error": 404,
+            "message": "resource not found"
+        })
 
     return app

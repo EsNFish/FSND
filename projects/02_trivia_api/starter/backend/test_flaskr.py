@@ -140,6 +140,53 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(actual_num_questions, expected_num_questions)
         self.assertEqual(actual_total_questions, expected_total_questions)
 
+    def test_delete_question__should_delete_question_with_id_passed_in(self):
+        questions = [
+            question_builder(),
+            question_builder(),
+            question_builder()
+        ]
+
+        with self.app.app_context():
+            self.populate_questions(questions)
+
+        res = self.client().get('/questions')
+        data = json.loads(res.data)
+
+        original_num_questions = len(data['questions'])
+        id_to_delete = data['questions'][0]['id']
+
+        self.client().delete('/questions/{}'.format(id_to_delete))
+
+        res = self.client().get('/questions')
+        data = json.loads(res.data)
+
+        final_num_questions = len(data['questions'])
+        ids = [question['id'] for question in data['questions']]
+
+        self.assertEqual(original_num_questions - 1, final_num_questions)
+        self.assertNotIn(id_to_delete, ids)
+
+    def test_delete_question__id_to_delete_does_not_exist__should_get_404_error(self):
+        questions = [
+            question_builder(),
+            question_builder(),
+            question_builder()
+        ]
+
+        with self.app.app_context():
+            self.populate_questions(questions)
+
+        expected_response = {
+            "success": False,
+            "error": 404,
+            "message": "resource not found"
+        }
+        response = self.client().delete('/questions/1000000000000000000')
+        actual_response = json.loads(response.data)
+
+        self.assertEqual(expected_response, actual_response)
+
 
 # Make the tests conveniently executable
 if __name__ == "__main__":
