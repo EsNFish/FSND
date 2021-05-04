@@ -1,10 +1,19 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 
-from .models import setup_db, Category
+from .models import setup_db, Category, Question
 
 QUESTIONS_PER_PAGE = 10
 
+def paginate_questions(request, questions):
+  page = request.args.get('page', 1, type=int)
+  start =  (page - 1) * QUESTIONS_PER_PAGE
+  end = start + QUESTIONS_PER_PAGE
+
+  questions = [question.format() for question in questions]
+  current_questions = questions[start:end]
+
+  return current_questions
 
 def create_app(test_config=None):
     # create and configure the app
@@ -27,6 +36,20 @@ def create_app(test_config=None):
         formatted_categories = {category.id: category.type for category in categories}
         return jsonify({
             'success': True,
+            'categories': formatted_categories
+        })
+
+    @app.route('/questions', methods=['GET'])
+    def get_questions():
+        questions = Question.query.all()
+        formatted_questions = paginate_questions(request, questions)
+        categories = Category.query.all()
+        formatted_categories = {category.id: category.type for category in categories}
+
+        return jsonify({
+            'success': True,
+            'questions': formatted_questions,
+            'total_questions': len(questions),
             'categories': formatted_categories
         })
 
