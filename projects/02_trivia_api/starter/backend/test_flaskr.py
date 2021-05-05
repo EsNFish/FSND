@@ -191,7 +191,7 @@ class TriviaTestCase(unittest.TestCase):
         original_num_questions = len(data['questions'])
 
         new_question = question_builder('What is your favorite color?', 'Yellow', 1, 5)
-        res = self.client().post('/questions', json=new_question)
+        res = self.client().post('/questions/question', json=new_question)
 
         self.assertEqual(res.status_code, 204)
         self.assertEqual(data['success'], True)
@@ -202,6 +202,26 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(original_num_questions + 1, updated_num_questions)
 
+    def test_handle_questions__returns_questions_with_search_word(self):
+        questions = [
+            question_builder(question='a'),
+            question_builder(question='b'),
+            question_builder(question='yabba'),
+            question_builder(question='dabba'),
+            question_builder(question='do')
+        ]
+
+        with self.app.app_context():
+            self.populate_questions(questions)
+
+        request_body = {
+            'searchTerm': 'a'
+        }
+        res = self.client().post('/questions', json=request_body)
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(3, len(data['questions']))
 
 # Make the tests conveniently executable
 if __name__ == "__main__":

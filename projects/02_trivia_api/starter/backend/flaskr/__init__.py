@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request, abort
 from flask_cors import CORS
+from sqlalchemy import func
 
 from .models import setup_db, Category, Question
 
@@ -42,16 +43,6 @@ def create_app(test_config=None):
     @app.route('/questions', methods=['POST', 'GET'])
     def get_questions():
 
-        if request.method == 'POST':
-            data = request.json
-
-            new_question = Question(answer=data['answer'], question=data['question'], difficulty=data['difficulty'], category=data['category'])
-            print(new_question)
-            new_question.insert()
-            return jsonify({
-                'success': True
-            }), 204
-
         if request.method == 'GET':
             questions = Question.query.all()
             formatted_questions = paginate_questions(request, questions)
@@ -63,6 +54,16 @@ def create_app(test_config=None):
                 'questions': formatted_questions,
                 'total_questions': len(questions),
                 'categories': formatted_categories
+            }), 200
+
+        if request.method == 'POST':
+            data = request.json
+
+            questions = Question.query.filter(func.lower(Question.question).contains(func.lower(data['searchTerm']))).all()
+
+            return jsonify({
+                'success': True,
+                'questions': [question.format() for question in questions]
             }), 200
 
     @app.route('/questions/<delete_id>', methods=['DELETE'])
@@ -80,16 +81,15 @@ def create_app(test_config=None):
             'success': True
         }), 204
 
-    '''
-  @TODO: 
-  Create a POST endpoint to get questions based on a search term. 
-  It should return any questions for whom the search term 
-  is a substring of the question. 
-
-  TEST: Search by any phrase. The questions list will update to include 
-  only question that include that string within their question. 
-  Try using the word "title" to start. 
-  '''
+    @app.route('/questions/question', methods=['POST'])
+    def handle_question():
+        data = request.json
+        new_question = Question(answer=data['answer'], question=data['question'], difficulty=data['difficulty'],
+                                category=data['category'])
+        new_question.insert()
+        return jsonify({
+            'success': True
+        }), 204
 
     '''
   @TODO: 
