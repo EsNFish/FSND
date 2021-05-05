@@ -6,7 +6,7 @@ from flaskr import create_app
 from flaskr.models import setup_db, Category, Question
 
 
-def question_builder(question='What', answer='Why', category='random', difficulty=1):
+def question_builder(question='What', answer='Why', category=2, difficulty=1):
     return {
         'question': question,
         'answer': answer,
@@ -102,19 +102,12 @@ class TriviaTestCase(unittest.TestCase):
 
         res = self.client().get('/questions')
 
-        expected_questions = [{'Why', 'random', 'What', 1}, {'Why', 'random', 'What', 1}]
         expected_num_questions = 2
-        expected_categories = ['Video Games', 'Music', 'Anime']
         data = json.loads(res.data)
-        actual_questions = [{question['question'], question['answer'], question['category'], question['difficulty']} for
-                            question in data['questions']]
         actual_num_questions = data['total_questions']
-        actual_categories = [category_type for key, category_type in data['categories'].items()]
         self.assertEqual(res.status_code, 200)
         self.assertTrue(data['success'])
-        self.assertEqual(actual_questions, expected_questions)
         self.assertEqual(actual_num_questions, expected_num_questions)
-        self.assertEqual(actual_categories, expected_categories)
 
     def test_get_questions__paginates_to_10_questions(self):
         # create 12 questions
@@ -186,6 +179,28 @@ class TriviaTestCase(unittest.TestCase):
         actual_response = json.loads(response.data)
 
         self.assertEqual(expected_response, actual_response)
+
+    def test_add_question__adds_the_new_question(self):
+        questions = [question_builder()]
+
+        with self.app.app_context():
+            self.populate_questions(questions)
+
+        res = self.client().get('/questions')
+        data = json.loads(res.data)
+        original_num_questions = len(data['questions'])
+
+        new_question = question_builder('What is your favorite color?', 'Yellow', 1, 5)
+        res = self.client().post('/questions', json=new_question)
+
+        self.assertEqual(res.status_code, 204)
+        self.assertEqual(data['success'], True)
+
+        res = self.client().get('/questions')
+        data = json.loads(res.data)
+        updated_num_questions = len(data['questions'])
+
+        self.assertEqual(original_num_questions + 1, updated_num_questions)
 
 
 # Make the tests conveniently executable

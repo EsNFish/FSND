@@ -39,19 +39,31 @@ def create_app(test_config=None):
             'categories': formatted_categories
         }), 200
 
-    @app.route('/questions', methods=['GET'])
+    @app.route('/questions', methods=['POST', 'GET'])
     def get_questions():
-        questions = Question.query.all()
-        formatted_questions = paginate_questions(request, questions)
-        categories = Category.query.all()
-        formatted_categories = {category.id: category.type for category in categories}
 
-        return jsonify({
-            'success': True,
-            'questions': formatted_questions,
-            'total_questions': len(questions),
-            'categories': formatted_categories
-        }), 200
+        if request.method == 'POST':
+            data = request.json
+
+            new_question = Question(answer=data['answer'], question=data['question'], difficulty=data['difficulty'], category=data['category'])
+            print(new_question)
+            new_question.insert()
+            return jsonify({
+                'success': True
+            }), 204
+
+        if request.method == 'GET':
+            questions = Question.query.all()
+            formatted_questions = paginate_questions(request, questions)
+            categories = Category.query.all()
+            formatted_categories = {category.id: category.type for category in categories}
+
+            return jsonify({
+                'success': True,
+                'questions': formatted_questions,
+                'total_questions': len(questions),
+                'categories': formatted_categories
+            }), 200
 
     @app.route('/questions/<delete_id>', methods=['DELETE'])
     def delete_question(delete_id):
@@ -67,17 +79,6 @@ def create_app(test_config=None):
         return jsonify({
             'success': True
         }), 204
-
-    '''
-  @TODO: 
-  Create an endpoint to POST a new question, 
-  which will require the question and answer text, 
-  category, and difficulty score.
-
-  TEST: When you submit a question on the "Add" tab, 
-  the form will clear and the question will appear at the end of the last page
-  of the questions list in the "List" tab.  
-  '''
 
     '''
   @TODO: 
