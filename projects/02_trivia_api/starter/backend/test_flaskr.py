@@ -223,6 +223,27 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(3, len(data['questions']))
 
+    def test_search_by_category__returns_questions_with_requested_category(self):
+        questions = [
+            question_builder(category=1),
+            question_builder(category=1),
+            question_builder(category=2),
+            question_builder(category=3),
+            question_builder(category=4),
+        ]
+
+        with self.app.app_context():
+            self.populate_questions(questions)
+
+        search_category = 1
+        res = self.client().get('/categories/{}/questions'.format(search_category))
+
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(2, len(data['questions']))
+
+
 # Make the tests conveniently executable
 if __name__ == "__main__":
     unittest.main()
