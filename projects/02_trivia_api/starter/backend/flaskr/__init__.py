@@ -1,3 +1,6 @@
+import json
+import random
+
 from flask import Flask, jsonify, request, abort
 from flask_cors import CORS
 from sqlalchemy import func
@@ -6,15 +9,17 @@ from .models import setup_db, Category, Question
 
 QUESTIONS_PER_PAGE = 10
 
+
 def paginate_questions(request, questions):
-  page = request.args.get('page', 1, type=int)
-  start =  (page - 1) * QUESTIONS_PER_PAGE
-  end = start + QUESTIONS_PER_PAGE
+    page = request.args.get('page', 1, type=int)
+    start = (page - 1) * QUESTIONS_PER_PAGE
+    end = start + QUESTIONS_PER_PAGE
 
-  questions = [question.format() for question in questions]
-  current_questions = questions[start:end]
+    questions = [question.format() for question in questions]
+    current_questions = questions[start:end]
 
-  return current_questions
+    return current_questions
+
 
 def create_app(test_config=None):
     # create and configure the app
@@ -59,7 +64,8 @@ def create_app(test_config=None):
         if request.method == 'POST':
             data = request.json
 
-            questions = Question.query.filter(func.lower(Question.question).contains(func.lower(data['searchTerm']))).all()
+            questions = Question.query.filter(
+                func.lower(Question.question).contains(func.lower(data['searchTerm']))).all()
 
             return jsonify({
                 'success': True,
@@ -101,23 +107,39 @@ def create_app(test_config=None):
             'questions': [question.format() for question in questions]
         }), 200
 
-    '''
-  @TODO: 
-  Create a POST endpoint to get questions to play the quiz. 
-  This endpoint should take category and previous question parameters 
-  and return a random questions within the given category, 
-  if provided, and that is not one of the previous questions. 
+    @app.route('/quizzes', methods=['POST'])
+    def play_quiz():
 
-  TEST: In the "Play" tab, after a user selects "All" or a category,
-  one question at a time is displayed, the user is allowed to answer
-  and shown whether they were correct or not. 
-  '''
+        data = json.loads(request.data)
+        previous_questions = data['previous_questions']
+        quiz_category = data['quiz_category']
+
+        if quiz_category['id'] == '0':
+            questions = Question.query.all()
+        else:
+            questions = Question.query.filter(Question.category == quiz_category['id']).all()
+
+        formatted_questions = [question.format() for question in questions]
+        final_questions = [formatted_question for formatted_question in formatted_questions if
+                           formatted_question['id'] not in previous_questions]
+
+        if len(final_questions) == 0:
+            return jsonify({
+                'success': True
+            })
+
+        random_question_index = random.randint(0, len(final_questions) - 1)
+        return jsonify({
+            'success': True,
+            'question': final_questions[random_question_index]
+        })
 
     '''
-  @TODO: 
-  Create error handlers for all expected errors 
-  including 404 and 422. 
-  '''
+    @TODO: 
+    Create error handlers for all expected errors 
+    including 404 and 422. 
+    '''
+
     @app.errorhandler(404)
     def unprocessable_entity(error):
         return jsonify({

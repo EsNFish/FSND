@@ -1,12 +1,14 @@
 import json
 import unittest
+
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import text as sa_text
 
 from flaskr import create_app
 from flaskr.models import setup_db, Category, Question
 
 
-def question_builder(question='What', answer='Why', category=2, difficulty=1):
+def question_builder(question='What', answer='Why', category='2', difficulty=1):
     return {
         'question': question,
         'answer': answer,
@@ -38,9 +40,10 @@ class TriviaTestCase(unittest.TestCase):
         # remove any data between tests
         with self.app.app_context():
             try:
-                self.db.session.query(Category).delete()
-                self.db.session.query(Question).delete()
-                self.db.session.commit()
+                self.db.engine.execute(
+                    sa_text('''TRUNCATE TABLE questions RESTART IDENTITY''').execution_options(autocommit=True))
+                self.db.engine.execute(
+                    sa_text('''TRUNCATE TABLE categories RESTART IDENTITY''').execution_options(autocommit=True))
             except:
                 self.db.session.rollback()
 
@@ -190,7 +193,7 @@ class TriviaTestCase(unittest.TestCase):
         data = json.loads(res.data)
         original_num_questions = len(data['questions'])
 
-        new_question = question_builder('What is your favorite color?', 'Yellow', 1, 5)
+        new_question = question_builder('What is your favorite color?', 'Yellow', '1', 5)
         res = self.client().post('/questions/question', json=new_question)
 
         self.assertEqual(res.status_code, 204)
@@ -225,11 +228,11 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_search_by_category__returns_questions_with_requested_category(self):
         questions = [
-            question_builder(category=1),
-            question_builder(category=1),
-            question_builder(category=2),
-            question_builder(category=3),
-            question_builder(category=4),
+            question_builder(category='1'),
+            question_builder(category='1'),
+            question_builder(category='2'),
+            question_builder(category='3'),
+            question_builder(category='4'),
         ]
 
         with self.app.app_context():
@@ -242,6 +245,93 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(2, len(data['questions']))
+
+    def test_play_quiz__returns_questions_not_in_previous_question_list(self):
+
+        question_to_exclude = question_builder(category='1')
+        questions = [
+            question_to_exclude,
+            question_builder(category='1', question='wa'),
+            question_builder(category='2'),
+            question_builder(category='3'),
+            question_builder(category='4'),
+        ]
+        expected_to_not_exist_question = {
+            'id': 1
+        }
+        expected_to_not_exist_question.update(question_to_exclude)
+
+        previous_questions = [1]
+
+        with self.app.app_context():
+            self.populate_questions(questions)
+
+        request_data = {
+            'previous_questions': previous_questions,
+            'quiz_category': {
+                'type': 'All',
+                'id': '0'
+            }
+        }
+
+        res = self.client().post('/quizzes', json=request_data)
+
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertNotEqual(expected_to_not_exist_question, data['question'])
+
+    def test_play_quiz__category_is_passed_int__returns_question_with_matching_category(self):
+
+        questions = [
+            question_builder(category='1'),
+            question_builder(category='2'),
+            question_builder(category='3'),
+            question_builder(category='4'),
+        ]
+
+        previous_questions = []
+
+        with self.app.app_context():
+            self.populate_questions(questions)
+
+        request_data = {
+            'previous_questions': previous_questions,
+            'quiz_category': {
+                'type': 'All',
+                'id': '4'
+            }
+        }
+
+        res = self.client().post('/quizzes', json=request_data)
+
+        data = json.loads(res.data)
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual('4', data['question']['category'])
+
+    def test_play_quiz__all_questions_in_previous_questions__response_does_not_include_question(self):
+
+        questions = [question_builder(category='1')]
+
+        previous_questions = [1]
+
+        with self.app.app_context():
+            self.populate_questions(questions)
+
+        request_data = {
+            'previous_questions': previous_questions,
+            'quiz_category': {
+                'type': 'All',
+                'id': '0'
+            }
+        }
+
+        res = self.client().post('/quizzes', json=request_data)
+
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertNotIn('question', data)
 
 
 # Make the tests conveniently executable
