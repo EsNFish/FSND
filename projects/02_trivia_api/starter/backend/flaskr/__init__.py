@@ -114,7 +114,7 @@ def create_app(test_config=None):
         previous_questions = data['previous_questions']
         quiz_category = data['quiz_category']
 
-        if quiz_category['id'] == '0':
+        if quiz_category['id'] == 0:
             questions = Question.query.all()
         else:
             questions = Question.query.filter(Question.category == quiz_category['id']).all()

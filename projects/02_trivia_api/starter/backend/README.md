@@ -1,89 +1,193 @@
-## Backend - Full Stack Trivia API 
+<h1>Backend</h1>
 
-### Installing Dependencies for the Backend
+<h2>Postgresql Setup:</h2>
 
-1. **Python 3.7** - Follow instructions to install the latest version of python for your platform in the [python docs](https://docs.python.org/3/using/unix.html#getting-and-installing-the-latest-version-of-python)
+Make sure postgresql is installed on your machine. Instructions on how to do this can be found here: https://www.postgresql.org/
 
+Once installed you can use the `psql trivia < trivia.psql`command to set up the tables and populate the tables with initial data for the app
 
-2. **Virtual Enviornment** - We recommend working within a virtual environment whenever using Python for projects. This keeps your dependencies for each project separate and organaized. Instructions for setting up a virual enviornment for your platform can be found in the [python docs](https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/)
+By defaut the application will default to the following setup for postgresql:
+- <strong>Port:</strong> 5432 </li>
+- <strong>User name:</strong> test </li>
+- <strong>User password:</strong> test </li>
 
+These values can be changed by modifying the variable database_path in the model.py file before starting the API
 
-3. **PIP Dependencies** - Once you have your virtual environment setup and running, install dependencies by naviging to the `/backend` directory and running:
-```bash
-pip install -r requirements.txt
-```
-This will install all of the required packages we selected within the `requirements.txt` file.
+<h2>Starting the API</h2>
 
+If you do not already have a Python environment created, execute the following:
+1) `python3 -m venv /path/to/new/virtual/environment` (the path is where you want to save the config files for the new virtual environment)
+2) `source <venv>/bin/activate` (venv is the path used in the previous step)
+3) `pip install requirements.txt` (this file is located in the project directory)
 
-4. **Key Dependencies**
- - [Flask](http://flask.pocoo.org/)  is a lightweight backend microservices framework. Flask is required to handle requests and responses.
+More details can be found here: https://docs.python.org/3/library/venv.html
 
- - [SQLAlchemy](https://www.sqlalchemy.org/) is the Python SQL toolkit and ORM we'll use handle the lightweight sqlite database. You'll primarily work in app.py and can reference models.py. 
+To start the api execute the following commands while in the backend directory: 
+1) `FLASK_APP=flaskr`
+2) `FLASK_ENV=development`
+3) `flask run`
 
- - [Flask-CORS](https://flask-cors.readthedocs.io/en/latest/#) is the extension we'll use to handle cross origin requests from our frontend server. 
+The base path of the API is localhost:5000
 
-### Database Setup
-With Postgres running, restore a database using the trivia.psql file provided. From the backend folder in terminal run:
-```bash
-psql trivia < trivia.psql
-```
+To hit the API, you can use curl or any web browser
 
-### Running the server
+<h2>Endpoints</h2>
 
-From within the `./src` directory first ensure you are working using your created virtual environment.
-
-To run the server, execute:
-
-```bash
-flask run --reload
-```
-
-The `--reload` flag will detect file changes and restart the server automatically.
-
-## ToDo Tasks
-
-One note before you delve into your tasks: for each endpoint you are expected to define the endpoint and response data. The frontend will be a plentiful resource because it is set up to expect certain endpoints and response data formats already. You should feel free to specify endpoints in your own way; if you do so, make sure to update the frontend or you will get some unexpected behavior. 
-
-1. Use Flask-CORS to enable cross-domain requests and set response headers. 
-2. Create an endpoint to handle GET requests for questions, including pagination (every 10 questions). This endpoint should return a list of questions, number of total questions, current category, categories. 
-3. Create an endpoint to handle GET requests for all available categories. 
-4. Create an endpoint to DELETE question using a question ID. 
-5. Create an endpoint to POST a new question, which will require the question and answer text, category, and difficulty score. 
-6. Create a POST endpoint to get questions based on category. 
-7. Create a POST endpoint to get questions based on a search term. It should return any questions for whom the search term is a substring of the question. 
-8. Create a POST endpoint to get questions to play the quiz. This endpoint should take category and previous question parameters and return a random questions within the given category, if provided, and that is not one of the previous questions. 
-9. Create error handlers for all expected errors including 400, 404, 422 and 500. 
-
-
-## REVIEW_COMMENT
-```
-This README is missing documentation of your endpoints. Below is an example for your endpoint to get all categories. Please use it as a reference for creating your documentation and resubmit your code. 
-
-Endpoints
-GET '/api/v1.0/categories'
-GET ...
-POST ...
-DELETE ...
-
-GET '/api/v1.0/categories'
+<h3>GET `/categories`</h3>
 - Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
 - Request Arguments: None
 - Returns: An object with a single key, categories, that contains a object of id: category_string key:value pairs. 
-{'1' : "Science",
-'2' : "Art",
-'3' : "Geography",
-'4' : "History",
-'5' : "Entertainment",
-'6' : "Sports"}
-
+```json
+{
+    "1" : "Science",
+    "2" : "Art",
+    "3" : "Geography",
+    "4" : "History",
+    "5" : "Entertainment",
+    "6" : "Sports"
+}
 ```
 
+<h3>GET `/questions`</h3>
+- Fetches a list of questions and list of categories
+- Request Arguments: None
+- Returns: An object with the keys categories, questions, success, and total_questions</br>
+```json
+{
+  "categories": {
+    "1": "Science", 
+    "2": "Art", 
+    "3": "Geography", 
+    "4": "History", 
+    "5": "Entertainment", 
+    "6": "Sports"
+  }, 
+  "questions": [
+    {
+      "answer": "Tom Cruise", 
+      "category": 5, 
+      "difficulty": 4, 
+      "id": 4, 
+      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
+    }, 
+    {
+      "answer": "Edward Scissorhands", 
+      "category": 5, 
+      "difficulty": 3, 
+      "id": 6, 
+      "question": "What was the title of the 1990 fantasy directed by Tim Burton about a young man with multi-bladed appendages?"
+    }
+  ], 
+  "success": true, 
+  "total_questions": 13
+}
+```
 
-## Testing
-To run the tests, run
+<h3>POST `/questions`</h3>
+- Fetches a list of questions containing the search term in the question
+- Request Body: 
+```json 
+{'searchTerm': '<seacrch term>'} 
 ```
-dropdb trivia_test
-createdb trivia_test
-psql trivia_test < trivia.psql
-python test_flaskr.py
+- Returns: An object with the keys questions and success
+```json
+{
+  "questions": [
+    {
+      "answer": "Tom Cruise", 
+      "category": 5, 
+      "difficulty": 4, 
+      "id": 4, 
+      "question": "What actor did author Anne Rice first denounce, then praise in the role of her beloved Lestat?"
+    }
+  ], 
+  "success": true
+}
 ```
+
+<h3>DELETE `/questions/<delete_id>`</h3>
+- Deletes the question with the id that matches the path param delete_id
+- Path param: delete_id
+- Returns: `204 NO CONTENT`
+
+
+<h3>POST `/questions/question`</h3>
+- Posts a new question to the database
+- Request Body: 
+```json
+{
+    "question":"What is your favorite color?",
+    "answer":"Yellow",
+    "difficulty":1,
+    "category":"3"
+}
+```
+- Returns: `204 NO CONTENT`
+
+<h3>GET `/categories/<category>/questions`</h3>
+- Returns a list of questions of the same category
+- Path param: category
+- Returns: 
+```json
+{
+  "questions": [
+    {
+      "answer": "George Washington Carver", 
+      "category": 4, 
+      "difficulty": 2, 
+      "id": 12, 
+      "question": "Who invented Peanut Butter?"
+    }
+  ], 
+  "success": true
+}
+```
+
+<h3>POST `/quizzes`</h3>
+- Returns a random question for either all categories or one if specified.
+- Request Body:
+```json
+{
+    "previous_questions":[],
+    "quiz_category":{
+        "type":"Science",
+        "id":"1"
+    }
+}
+```
+- Returns a question : 
+```json
+{
+  "question": {
+    "answer": "CPU", 
+    "category": 1, 
+    "difficulty": 1, 
+    "id": 29, 
+    "question": "wat is brain of computer"
+  }, 
+  "success": true
+}
+```
+
+<h2>Unit Tests</h2>
+
+<h3>Setting up the test database</h3>
+By default the unit tests use a database named trivia_test. It also uses a user named test with a password of test to log into the database. These can be changed in the test_flaskr.py file if desired.
+
+Notes:
+- The test database is created when running the command `psql trivia < trivia.psql`
+- the unit tests will populate the tables with data. No manual action is required of the user.
+
+<h3>Executing the unit tests</h3>
+To run the unit tests, execute: `python -m test_flaskr` from the project directory. 
+
+<h3>Unit test format</h3>
+Each test conforms to the following:
+1) Tests use the following naming convention: `test_<name of method being tested>__<any special cases>__<what is the expected outcome>`
+    - an example test name is : `test_delete_question__id_to_delete_does_not_exist__should_get_404_error`
+    - the special case is not necessary, it is mostly used to differentiate edge cases for the same method. Example: `test_delete_question__should_delete_question_with_id_passed_in`
+2) Follows the structure of setup, exercise and assert
+    - setup is where any test data is set up, utils have been provided to help set up the database
+    - exercise is where the endpoint beting tested is called
+    - assert is where any assertions are made about the results of the exercise
+3) Each tests sets up it's own data in the database and clears it afterwards to keep tests consistent every run. 
