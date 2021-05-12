@@ -163,7 +163,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(original_num_questions - 1, final_num_questions)
         self.assertNotIn(id_to_delete, ids)
 
-    def test_delete_question__id_to_delete_does_not_exist__should_get_404_error(self):
+    def test_delete_question__id_to_delete_is_too_large_for_int__should_get_422_error(self):
         questions = [
             question_builder(),
             question_builder(),
@@ -175,10 +175,28 @@ class TriviaTestCase(unittest.TestCase):
 
         expected_response = {
             "success": False,
+            "error": 422,
+            "message": "Unprocessable Entity"
+        }
+        response = self.client().delete('/questions/1000000000000000000')
+        actual_response = json.loads(response.data)
+
+        self.assertEqual(expected_response, actual_response)
+
+    def test_delete_question__id_to_delete_does_not_exist__should_get_404_error(self):
+        questions = [
+            question_builder()
+        ]
+
+        with self.app.app_context():
+            self.populate_questions(questions)
+
+        expected_response = {
+            "success": False,
             "error": 404,
             "message": "resource not found"
         }
-        response = self.client().delete('/questions/1000000000000000000')
+        response = self.client().delete('/questions/1000')
         actual_response = json.loads(response.data)
 
         self.assertEqual(expected_response, actual_response)
@@ -270,7 +288,7 @@ class TriviaTestCase(unittest.TestCase):
             'previous_questions': previous_questions,
             'quiz_category': {
                 'type': 'All',
-                'id': '0'
+                'id': 0
             }
         }
 
@@ -281,7 +299,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertNotEqual(expected_to_not_exist_question, data['question'])
 
-    def test_play_quiz__category_is_passed_int__returns_question_with_matching_category(self):
+    def test_play_quiz__category_is_passed_in__returns_question_with_matching_category(self):
 
         questions = [
             question_builder(category='1'),

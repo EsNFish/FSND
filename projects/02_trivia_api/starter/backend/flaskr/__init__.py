@@ -4,6 +4,8 @@ import random
 from flask import Flask, jsonify, request, abort
 from flask_cors import CORS
 from sqlalchemy import func
+from sqlalchemy.dialects.postgresql import psycopg2
+from sqlalchemy.exc import DBAPIError
 
 from .models import setup_db, Category, Question
 
@@ -74,11 +76,20 @@ def create_app(test_config=None):
 
     @app.route('/questions/<delete_id>', methods=['DELETE'])
     def delete_question(delete_id):
+
+        effected_lines = 0
+
         try:
-            Question.query.filter(Question.id == delete_id).delete()
+            effected_lines = Question.query.filter(Question.id == delete_id).delete()
             db.session.commit()
-        except:
+        except DBAPIError:
             db.session.rollback()
+            db.session.close()
+            abort(422)
+
+        if effected_lines == 0:
+            db.session.rollback()
+            db.session.close()
             abort(404)
 
         db.session.close()
@@ -134,18 +145,20 @@ def create_app(test_config=None):
             'question': final_questions[random_question_index]
         })
 
-    '''
-    @TODO: 
-    Create error handlers for all expected errors 
-    including 404 and 422. 
-    '''
-
     @app.errorhandler(404)
     def unprocessable_entity(error):
         return jsonify({
             "success": False,
             "error": 404,
             "message": "resource not found"
+        })
+
+    @app.errorhandler(422)
+    def unprocessable_entity(error):
+        return jsonify({
+            "success": False,
+            "error": 422,
+            "message": "Unprocessable Entity"
         })
 
     return app
