@@ -169,6 +169,30 @@ To hit the API, you can use curl or any web browser
 }
 ```
 
+<h2>Error Codes</h2>
+<h3>404</h3>
+Error Response:
+```json
+{
+   "success": false,
+   "error": 404,
+   "message": "resource not found"
+}
+```
+Only thrown when the user attempts to delete a question that doesn't exist. 
+
+<h3>422</h3>
+Error Response:
+```json
+{
+   "success": false,
+   "error": 422,
+   "message": "Unprocessable Entity"
+}
+```
+Only thrown when the user attempts to delete a question with an id that is too large for an int. Example: 100000000000000000000 
+
+
 <h2>Unit Tests</h2>
 
 <h3>Setting up the test database</h3>
