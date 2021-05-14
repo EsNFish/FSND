@@ -7,9 +7,9 @@ Make sure postgresql is installed on your machine. Instructions on how to do thi
 Once installed you can use the `psql trivia < trivia.psql`command to set up the tables and populate the tables with initial data for the app
 
 By defaut the application will default to the following setup for postgresql:
-- <strong>Port:</strong> 5432 </li>
-- <strong>User name:</strong> test </li>
-- <strong>User password:</strong> test </li>
+- <strong>Port:</strong> 5432 
+- <strong>User name:</strong> test
+- <strong>User password:</strong> test
 
 These values can be changed by modifying the variable database_path in the model.py file before starting the API
 
@@ -33,10 +33,12 @@ To hit the API, you can use curl or any web browser
 
 <h2>Endpoints</h2>
 
-<h3>GET `/categories`</h3>
+<h3>GET /categories</h3>
+
 - Fetches a dictionary of categories in which the keys are the ids and the value is the corresponding string of the category
 - Request Arguments: None
-- Returns: An object with a single key, categories, that contains a object of id: category_string key:value pairs. 
+- Returns: An object with a single key, categories, that contains a object of id: category_string key:value pairs.
+
 ```json
 {
     "1" : "Science",
@@ -48,10 +50,12 @@ To hit the API, you can use curl or any web browser
 }
 ```
 
-<h3>GET `/questions`</h3>
+<h3>GET /questions</h3>
+
 - Fetches a list of questions and list of categories
 - Request Arguments: None
 - Returns: An object with the keys categories, questions, success, and total_questions</br>
+
 ```json
 {
   "categories": {
@@ -83,13 +87,17 @@ To hit the API, you can use curl or any web browser
 }
 ```
 
-<h3>POST `/questions`</h3>
+<h3>POST /questions</h3>
+
 - Fetches a list of questions containing the search term in the question
 - Request Body: 
+
 ```json 
-{'searchTerm': '<seacrch term>'} 
+{"searchTerm": "<seacrch term>"} 
 ```
+
 - Returns: An object with the keys questions and success
+
 ```json
 {
   "questions": [
@@ -105,15 +113,17 @@ To hit the API, you can use curl or any web browser
 }
 ```
 
-<h3>DELETE `/questions/<delete_id>`</h3>
+<h3>DELETE /questions/delete_id</h3>
+
 - Deletes the question with the id that matches the path param delete_id
 - Path param: delete_id
 - Returns: `204 NO CONTENT`
 
 
-<h3>POST `/questions/question`</h3>
+<h3>POST /questions/question</h3>
 - Posts a new question to the database
-- Request Body: 
+- Request Body:
+ 
 ```json
 {
     "question":"What is your favorite color?",
@@ -124,10 +134,12 @@ To hit the API, you can use curl or any web browser
 ```
 - Returns: `204 NO CONTENT`
 
-<h3>GET `/categories/<category>/questions`</h3>
+<h3>GET /categories/category/questions</h3>
+    
 - Returns a list of questions of the same category
 - Path param: category
 - Returns: 
+
 ```json
 {
   "questions": [
@@ -143,9 +155,11 @@ To hit the API, you can use curl or any web browser
 }
 ```
 
-<h3>POST `/quizzes`</h3>
+<h3>POST /quizzes</h3>
+
 - Returns a random question for either all categories or one if specified.
 - Request Body:
+
 ```json
 {
     "previous_questions":[],
@@ -155,7 +169,9 @@ To hit the API, you can use curl or any web browser
     }
 }
 ```
+
 - Returns a question : 
+
 ```json
 {
   "question": {
@@ -172,6 +188,7 @@ To hit the API, you can use curl or any web browser
 <h2>Error Codes</h2>
 <h3>404</h3>
 Error Response:
+
 ```json
 {
    "success": false,
@@ -183,6 +200,7 @@ Only thrown when the user attempts to delete a question that doesn't exist.
 
 <h3>422</h3>
 Error Response:
+
 ```json
 {
    "success": false,
@@ -207,10 +225,13 @@ To run the unit tests, execute: `python -m test_flaskr` from the project directo
 
 <h3>Unit test format</h3>
 Each test conforms to the following:
+
 1) Tests use the following naming convention: `test_<name of method being tested>__<any special cases>__<what is the expected outcome>`
+
     - an example test name is : `test_delete_question__id_to_delete_does_not_exist__should_get_404_error`
     - the special case is not necessary, it is mostly used to differentiate edge cases for the same method. Example: `test_delete_question__should_delete_question_with_id_passed_in`
 2) Follows the structure of setup, exercise and assert
+
     - setup is where any test data is set up, utils have been provided to help set up the database
     - exercise is where the endpoint beting tested is called
     - assert is where any assertions are made about the results of the exercise
