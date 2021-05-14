@@ -48,7 +48,7 @@ def create_app(test_config=None):
         }), 200
 
     @app.route('/questions', methods=['POST', 'GET'])
-    def get_questions():
+    def handle_questions():
 
         if request.method == 'GET':
             questions = Question.query.all()
@@ -66,13 +66,25 @@ def create_app(test_config=None):
         if request.method == 'POST':
             data = request.json
 
-            questions = Question.query.filter(
-                func.lower(Question.question).contains(func.lower(data['searchTerm']))).all()
+            if 'searchTerm' in data:
+                questions = Question.query.filter(
+                    func.lower(Question.question).contains(func.lower(data['searchTerm']))).all()
 
-            return jsonify({
-                'success': True,
-                'questions': [question.format() for question in questions]
-            }), 200
+                return jsonify({
+                    'success': True,
+                    'questions': [question.format() for question in questions]
+                }), 200
+            elif 'answer' and "question" and "difficulty" and "category" in data:
+                data = request.json
+                new_question = Question(answer=data['answer'], question=data['question'], difficulty=data['difficulty'],
+                                        category=data['category'])
+                new_question.insert()
+                return jsonify({
+                    'success': True
+                }), 204
+            else:
+                abort(422)
+
 
     @app.route('/questions/<delete_id>', methods=['DELETE'])
     def delete_question(delete_id):
@@ -94,16 +106,6 @@ def create_app(test_config=None):
 
         db.session.close()
 
-        return jsonify({
-            'success': True
-        }), 204
-
-    @app.route('/questions/question', methods=['POST'])
-    def handle_question():
-        data = request.json
-        new_question = Question(answer=data['answer'], question=data['question'], difficulty=data['difficulty'],
-                                category=data['category'])
-        new_question.insert()
         return jsonify({
             'success': True
         }), 204

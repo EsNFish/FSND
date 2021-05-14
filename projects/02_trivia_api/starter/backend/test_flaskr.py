@@ -20,6 +20,18 @@ def question_builder(question='What', answer='Why', category='2', difficulty=1):
 class TriviaTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
 
+    expected_404_response = {
+        "success": False,
+        "error": 404,
+        "message": "resource not found"
+    }
+
+    expected_422_response = {
+        "success": False,
+        "error": 422,
+        "message": "Unprocessable Entity"
+    }
+
     def setUp(self):
         """Define test variables and initialize app."""
         self.app = create_app()
@@ -98,7 +110,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['success'])
         self.assertEqual(actual_categories, expected_categories)
 
-    def test_get_questions__returns_questions_from_database(self):
+    def test_handle_questions__call_with_get__returns_questions_from_database(self):
         with self.app.app_context():
             self.populate_questions()
             self.populate_categories()
@@ -112,7 +124,7 @@ class TriviaTestCase(unittest.TestCase):
         self.assertTrue(data['success'])
         self.assertEqual(actual_num_questions, expected_num_questions)
 
-    def test_get_questions__paginates_to_10_questions(self):
+    def test_handle_questions__call_with_get__paginates_to_10_questions(self):
         # create 12 questions
         questions = [
             question_builder(), question_builder(), question_builder(), question_builder(), question_builder(),
@@ -173,15 +185,10 @@ class TriviaTestCase(unittest.TestCase):
         with self.app.app_context():
             self.populate_questions(questions)
 
-        expected_response = {
-            "success": False,
-            "error": 422,
-            "message": "Unprocessable Entity"
-        }
         response = self.client().delete('/questions/1000000000000000000')
         actual_response = json.loads(response.data)
 
-        self.assertEqual(expected_response, actual_response)
+        self.assertEqual(self.expected_422_response, actual_response)
 
     def test_delete_question__id_to_delete_does_not_exist__should_get_404_error(self):
         questions = [
@@ -191,17 +198,12 @@ class TriviaTestCase(unittest.TestCase):
         with self.app.app_context():
             self.populate_questions(questions)
 
-        expected_response = {
-            "success": False,
-            "error": 404,
-            "message": "resource not found"
-        }
         response = self.client().delete('/questions/1000')
         actual_response = json.loads(response.data)
 
-        self.assertEqual(expected_response, actual_response)
+        self.assertEqual(self.expected_404_response, actual_response)
 
-    def test_add_question__adds_the_new_question(self):
+    def test_handle_questions__call_with_post_and_question_in_request_body__adds_the_new_question(self):
         questions = [question_builder()]
 
         with self.app.app_context():
@@ -212,7 +214,7 @@ class TriviaTestCase(unittest.TestCase):
         original_num_questions = len(data['questions'])
 
         new_question = question_builder('What is your favorite color?', 'Yellow', '1', 5)
-        res = self.client().post('/questions/question', json=new_question)
+        res = self.client().post('/questions', json=new_question)
 
         self.assertEqual(res.status_code, 204)
         self.assertEqual(data['success'], True)
@@ -223,7 +225,7 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(original_num_questions + 1, updated_num_questions)
 
-    def test_handle_questions__returns_questions_with_search_word(self):
+    def test_handle_questions__call_with_post_and_search_term_in_request_body__returns_questions_with_search_word(self):
         questions = [
             question_builder(question='a'),
             question_builder(question='b'),
@@ -243,6 +245,23 @@ class TriviaTestCase(unittest.TestCase):
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(3, len(data['questions']))
+
+    def test_handle_questions__call_with_random_body__returns_422_error(self):
+        questions = [
+            question_builder(question='a')
+        ]
+
+        with self.app.app_context():
+            self.populate_questions(questions)
+
+        request_body = {
+            'not a proper body': 'a'
+        }
+
+        response = self.client().post('/questions', json=request_body)
+        actual_response = json.loads(response.data)
+
+        self.assertEqual(self.expected_422_response, actual_response)
 
     def test_search_by_category__returns_questions_with_requested_category(self):
         questions = [

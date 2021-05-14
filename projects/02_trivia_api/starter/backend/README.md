@@ -119,6 +119,7 @@ To hit the API, you can use curl or any web browser
   "success": true
 }
 ```
+
 <h3>POST /questions</h3>
 
 - Posts a new question to the database
@@ -140,7 +141,6 @@ To hit the API, you can use curl or any web browser
 - Deletes the question with the id that matches the path param delete_id
 - Path param: delete_id - interger
 - Returns: `204 NO CONTENT`
-
 
 <h3>GET /categories/${category}/questions</h3>
 
@@ -205,7 +205,9 @@ Error Response:
 }
 ```
 
-Only thrown when the user attempts to delete a question that doesn't exist.
+Thrown when:
+
+- User attempts to delete an id that doesn't exist
 
 <h3>422</h3>
 Error Response:
@@ -218,8 +220,11 @@ Error Response:
 }
 ```
 
-Only thrown when the user attempts to delete a question with an id that is too large for an int. Example:
-100000000000000000000
+Thrown when:
+
+- The user attempts to delete a question with an id that is too large for an int. Example:
+  100000000000000000000
+- User sends post request to /questions with a improper body
 
 <h2>Unit Tests</h2>
 
