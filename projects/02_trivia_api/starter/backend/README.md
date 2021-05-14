@@ -57,10 +57,10 @@ To hit the API, you can use curl or any web browser
 }
 ```
 
-<h3>GET /questions</h3>
+<h3>GET /questions?page=${integer}</h3>
 
-- Fetches a list of questions and list of categories
-- Request Arguments: None
+- Fetches a list of questions and list of categories 10 at a time
+- Query Param: page (used to get the specified group of 10 questions)
 - Returns: An object with the keys categories, questions, success, and total_questions</br>
 
 ```json
@@ -119,14 +119,7 @@ To hit the API, you can use curl or any web browser
   "success": true
 }
 ```
-
-<h3>DELETE /questions/delete_id</h3>
-
-- Deletes the question with the id that matches the path param delete_id
-- Path param: delete_id
-- Returns: `204 NO CONTENT`
-
-<h3>POST /questions/question</h3>
+<h3>POST /questions</h3>
 
 - Posts a new question to the database
 - Request Body:
@@ -142,10 +135,17 @@ To hit the API, you can use curl or any web browser
 
 - Returns: `204 NO CONTENT`
 
-<h3>GET /categories/category/questions</h3>
+<h3>DELETE /questions/${delete_id}</h3>
+
+- Deletes the question with the id that matches the path param delete_id
+- Path param: delete_id - interger
+- Returns: `204 NO CONTENT`
+
+
+<h3>GET /categories/${category}/questions</h3>
 
 - Returns a list of questions of the same category
-- Path param: category
+- Path param: category - int
 - Returns:
 
 ```json
