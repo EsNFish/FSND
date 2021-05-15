@@ -8,7 +8,7 @@ from flaskr import create_app
 from flaskr.models import setup_db, Category, Question
 
 
-def question_builder(question='What', answer='Why', category='2', difficulty=1):
+def question_builder(question='What', answer='Why', category=1, difficulty=1):
     return {
         'question': question,
         'answer': answer,
@@ -32,40 +32,10 @@ class TriviaTestCase(unittest.TestCase):
         "message": "Unprocessable Entity"
     }
 
-    def setUp(self):
-        """Define test variables and initialize app."""
-        self.app = create_app()
-        self.client = self.app.test_client
-        self.database_name = "trivia_test"
-        self.database_path = "postgresql://test:test@{}/{}".format('localhost:5432', self.database_name)
-        setup_db(self.app, self.database_path)
-
-        # binds the app to the current context
-        with self.app.app_context():
-            self.db = SQLAlchemy()
-            self.db.init_app(self.app)
-            # create all tables
-            self.db.drop_all()
-            self.db.create_all()
-
-    def tearDown(self):
-        # remove any data between tests
-        with self.app.app_context():
-            try:
-                self.db.engine.execute(
-                    sa_text('''TRUNCATE TABLE questions RESTART IDENTITY''').execution_options(autocommit=True))
-                self.db.engine.execute(
-                    sa_text('''TRUNCATE TABLE categories RESTART IDENTITY''').execution_options(autocommit=True))
-            except:
-                self.db.session.rollback()
-
-            self.db.session.close()
-        pass
-
     def populate_categories(self, categories=None):
         # Set default if no categories are passed in
         if categories is None:
-            categories = ['Video Games', 'Music', 'Anime']
+            categories = ['Video Games', 'Music', 'Anime', 'Computers']
 
         # Add categories to database
         for category in categories:
@@ -87,6 +57,39 @@ class TriviaTestCase(unittest.TestCase):
 
         pass
 
+    def setUp(self):
+        """Define test variables and initialize app."""
+        self.app = create_app()
+        self.client = self.app.test_client
+        self.database_name = "trivia_test"
+        self.database_path = "postgresql://test:test@{}/{}".format('localhost:5432', self.database_name)
+        setup_db(self.app, self.database_path)
+
+        # binds the app to the current context
+        with self.app.app_context():
+            self.db = SQLAlchemy()
+            self.db.init_app(self.app)
+            # create all tables
+            self.db.drop_all()
+            self.db.create_all()
+            self.populate_categories()
+
+    def tearDown(self):
+        # remove any data between tests
+        with self.app.app_context():
+            try:
+                self.db.engine.execute(
+                    sa_text('''TRUNCATE TABLE categories RESTART IDENTITY CASCADE ''').execution_options(
+                        autocommit=True))
+                self.db.engine.execute(
+                    sa_text('''TRUNCATE TABLE questions RESTART IDENTITY CASCADE ''').execution_options(
+                        autocommit=True))
+            except:
+                self.db.session.rollback()
+
+            self.db.session.close()
+        pass
+
     """
        Tests will follow the following format:
        
@@ -98,12 +101,10 @@ class TriviaTestCase(unittest.TestCase):
     """
 
     def test_get_categories__returns_categories_from_database(self):
-        with self.app.app_context():
-            self.populate_categories()
 
         res = self.client().get('/categories')
 
-        expected_categories = ['Video Games', 'Music', 'Anime']
+        expected_categories = ['Video Games', 'Music', 'Anime', 'Computers']
         data = json.loads(res.data)
         actual_categories = [category_type for key, category_type in data['categories'].items()]
         self.assertEqual(res.status_code, 200)
@@ -113,7 +114,6 @@ class TriviaTestCase(unittest.TestCase):
     def test_handle_questions__call_with_get__returns_questions_from_database(self):
         with self.app.app_context():
             self.populate_questions()
-            self.populate_categories()
 
         res = self.client().get('/questions')
 
@@ -134,7 +134,6 @@ class TriviaTestCase(unittest.TestCase):
 
         with self.app.app_context():
             self.populate_questions(questions)
-            self.populate_categories()
 
         expected_num_questions = 10
         expected_total_questions = 12
@@ -213,7 +212,7 @@ class TriviaTestCase(unittest.TestCase):
         data = json.loads(res.data)
         original_num_questions = len(data['questions'])
 
-        new_question = question_builder('What is your favorite color?', 'Yellow', '1', 5)
+        new_question = question_builder('What is your favorite color?', 'Yellow', 1, 5)
         res = self.client().post('/questions', json=new_question)
 
         self.assertEqual(res.status_code, 204)
@@ -265,11 +264,11 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_search_by_category__returns_questions_with_requested_category(self):
         questions = [
-            question_builder(category='1'),
-            question_builder(category='1'),
-            question_builder(category='2'),
-            question_builder(category='3'),
-            question_builder(category='4'),
+            question_builder(category=1),
+            question_builder(category=1),
+            question_builder(category=2),
+            question_builder(category=3),
+            question_builder(category=4),
         ]
 
         with self.app.app_context():
@@ -285,13 +284,13 @@ class TriviaTestCase(unittest.TestCase):
 
     def test_play_quiz__returns_questions_not_in_previous_question_list(self):
 
-        question_to_exclude = question_builder(category='1')
+        question_to_exclude = question_builder(category=1)
         questions = [
             question_to_exclude,
-            question_builder(category='1', question='wa'),
-            question_builder(category='2'),
-            question_builder(category='3'),
-            question_builder(category='4'),
+            question_builder(category=1, question='wa'),
+            question_builder(category=2),
+            question_builder(category=3),
+            question_builder(category=4),
         ]
         expected_to_not_exist_question = {
             'id': 1
@@ -321,10 +320,10 @@ class TriviaTestCase(unittest.TestCase):
     def test_play_quiz__category_is_passed_in__returns_question_with_matching_category(self):
 
         questions = [
-            question_builder(category='1'),
-            question_builder(category='2'),
-            question_builder(category='3'),
-            question_builder(category='4'),
+            question_builder(category=1),
+            question_builder(category=2),
+            question_builder(category=3),
+            question_builder(category=4),
         ]
 
         previous_questions = []
@@ -344,11 +343,11 @@ class TriviaTestCase(unittest.TestCase):
 
         data = json.loads(res.data)
         self.assertEqual(res.status_code, 200)
-        self.assertEqual('4', data['question']['category'])
+        self.assertEqual(4, data['question']['category'])
 
     def test_play_quiz__all_questions_in_previous_questions__response_does_not_include_question(self):
 
-        questions = [question_builder(category='1')]
+        questions = [question_builder(category=1)]
 
         previous_questions = [1]
 

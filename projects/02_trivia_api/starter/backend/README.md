@@ -5,8 +5,8 @@
 Make sure postgresql is installed on your machine. Instructions on how to do this can be found
 here: https://www.postgresql.org/
 
-Once installed you can use the `psql trivia < trivia.psql`command to set up the tables and populate the tables with
-initial data for the app
+Once installed you can use the `createdb -U test trivia` command to create the db and then `psql trivia < trivia.psql`
+command to set up the tables and populate the tables with initial data for the app
 
 By default, the application will default to the following setup for postgresql:
 
@@ -234,8 +234,9 @@ log into the database. These can be changed in the test_flaskr.py file if desire
 
 Notes:
 
-- The test database is created when running the command `psql trivia < trivia.psql`
-- the unit tests will populate the tables with data. No manual action is required of the user.
+- Make sure the database `triva_test` exists. If it does not, you can execute `createdb -U test trivia_test` to create
+  the database
+- The unit tests will create the tables and populate them with data as needed. No manual action is required of the user.
 
 <h3>Executing the unit tests</h3>
 To run the unit tests, execute: `python -m test_flaskr` from the project directory.
@@ -254,4 +255,10 @@ Each test conforms to the following:
     - setup is where any test data is set up, utils have been provided to help set up the database
     - exercise is where the endpoint beting tested is called
     - assert is where any assertions are made about the results of the exercise
-3) Each tests sets up it's own data in the database and clears it afterwards to keep tests consistent every run. 
+3) Each tests sets up it's own data in the database and clears it afterwards to keep tests consistent every run.
+
+<h3>Resetting test database if something goes wrong</h3>
+
+1) `dropdb -U test test_trivia`
+2) `createdb -U test test_trivia`
+3) `python -m test_flaskr`
