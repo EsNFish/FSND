@@ -1,11 +1,11 @@
-import os
-from flask import Flask, request, jsonify, abort
-from sqlalchemy import exc
 import json
-from flask_cors import CORS
 
+from flask import Flask, request, jsonify, abort
+from flask_cors import CORS
+from sqlalchemy.exc import IntegrityError
+
+from .auth.auth import requires_auth
 from .database.models import db_drop_and_create_all, setup_db, Drink
-from .auth.auth import AuthError, requires_auth
 
 app = Flask(__name__)
 setup_db(app)
@@ -13,12 +13,12 @@ CORS(app)
 
 db_drop_and_create_all()
 
+
 # ROUTES
 
 
 @app.route('/drinks')
 def get_drinks():
-
     available_drinks = [drink.short() for drink in Drink.query.all()]
     return jsonify({
         "success": True,
@@ -28,7 +28,7 @@ def get_drinks():
 
 @app.route('/drinks-detail')
 @requires_auth('get:drinks-detail')
-def get_drink_details(payload):
+def get_drink_details(auth_token):
     available_drinks_details = [drink.long() for drink in Drink.query.all()]
     return jsonify({
         "success": True,
@@ -36,24 +36,29 @@ def get_drink_details(payload):
     })
 
 
-'''
-@TODO implement endpoint
-    GET /drinks-detail
-        it should require the 'get:drinks-detail' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drinks} where drinks is the list of drinks
-        or appropriate status code indicating reason for failure
-'''
+@app.route('/drinks', methods=['POST'])
+@requires_auth('post:drinks')
+def post_drink(auth_token):
+    data = request.json
 
-'''
-@TODO implement endpoint
-    POST /drinks
-        it should create a new row in the drinks table
-        it should require the 'post:drinks' permission
-        it should contain the drink.long() data representation
-    returns status code 200 and json {"success": True, "drinks": drink} where drink an array containing only the newly created drink
-        or appropriate status code indicating reason for failure
-'''
+    if 'title' not in data or 'recipe' not in data:
+        abort(422, "Missing data in the request")
+
+    created_drink = Drink(
+        title=data['title'],
+        recipe=json.dumps(data['recipe'])
+    )
+
+    try:
+        created_drink.insert()
+    except IntegrityError:
+        abort(422, "Drink already exists in database")
+
+    return jsonify({
+        "success": True,
+        "drinks": [created_drink.long()]
+    })
+
 
 '''
 @TODO implement endpoint
@@ -89,7 +94,7 @@ def unprocessable(error):
     return jsonify({
         "success": False,
         "error": 422,
-        "message": "unprocessable"
+        "message": error.description
     }), 422
 
 
@@ -108,6 +113,16 @@ def unprocessable(error):
 @TODO implement error handler for 404
     error handler should conform to general task above
 '''
+
+
+@app.errorhandler(403)
+def handle_403(error):
+    return jsonify({
+        "success": False,
+        "error": 403,
+        "message": error.description
+    }), 403
+
 
 '''
 @TODO implement error handler for AuthError
