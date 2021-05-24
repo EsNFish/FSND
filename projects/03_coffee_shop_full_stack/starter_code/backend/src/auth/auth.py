@@ -3,54 +3,35 @@ from functools import wraps
 from urllib.request import urlopen
 
 from flask import request, abort
-from jose import jwt
+from jose import jwt, exceptions
 
 AUTH0_DOMAIN = 'fish-coffee-shop.us.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'fish-coffee-shop'
 
-# AuthError Exception
-'''
-AuthError Exception
-A standardized way to communicate auth failure modes
-'''
-
-
-class AuthError(Exception):
-    def __init__(self, error, status_code):
-        self.error = error
-        self.status_code = status_code
-
 
 # Auth Header
-
 def get_token_auth_header():
     if 'Authorization' not in request.headers:
-        abort(401)
+        abort(401, 'Authorization header required')
 
     auth_header = request.headers['Authorization']
     header_parts = auth_header.split(' ')
-
+    print(header_parts)
     if len(header_parts) != 2:
-        abort(401)
+        abort(401, 'Malformed header')
     elif header_parts[0].lower() != 'bearer':
-        abort(401)
+        abort(401, 'Auth token needs to be bearer token')
 
     return header_parts[1]
 
 
 def check_permissions(permission, payload):
     if 'permissions' not in payload:
-        raise AuthError({
-            'code': 'invalid_claims',
-            'description': 'Permissions not included in JWT.'
-        }, 400)
+        abort(403, 'Permissions not included in JWT.')
 
     if permission not in payload['permissions']:
-        raise AuthError({
-            'code': 'unauthorized',
-            'description': 'Permission not found.'
-        }, 403)
+        abort(403, 'Permission not found.')
     return True
 
 
@@ -60,16 +41,15 @@ def verify_decode_jwt(token):
     jwks = json.loads(jsonurl.read())
 
     # GET THE DATA IN THE HEADER
-    unverified_header = jwt.get_unverified_header(token)
+    try:
+        unverified_header = jwt.get_unverified_header(token)
+    except exceptions.JWTError:
+        abort(400, 'Could not decode JWT token')
 
     # CHOOSE OUR KEY
     rsa_key = {}
     if 'kid' not in unverified_header:
-        print('in invalid header')
-        raise AuthError({
-            'code': 'invalid_header',
-            'description': 'Authorization malformed.'
-        }, 401)
+        abort(401, 'Authorization malformed.')
 
     for key in jwks['keys']:
         if key['kid'] == unverified_header['kid']:
@@ -96,27 +76,15 @@ def verify_decode_jwt(token):
             return payload
 
         except jwt.ExpiredSignatureError:
-            raise AuthError({
-                'code': 'token_expired',
-                'description': 'Token expired.'
-            }, 401)
+            abort(401, 'Token expired.')
 
         except jwt.JWTClaimsError:
-            print('in invalid claims')
-            raise AuthError({
-                'code': 'invalid_claims',
-                'description': 'Incorrect claims. Please, check the audience and issuer.'
-            }, 401)
+            abort(401, 'Incorrect claims. Please, check the audience and issuer.')
+
         except Exception:
-            print('in invalid header')
-            raise AuthError({
-                'code': 'invalid_header',
-                'description': 'Unable to parse authentication token.'
-            }, 400)
-    raise AuthError({
-        'code': 'invalid_header',
-        'description': 'Unable to find the appropriate key.'
-    }, 400)
+            abort(400, 'Unable to parse authentication token')
+
+    abort(403, "Missing permissions")
 
 
 def requires_auth(permission=''):
@@ -124,10 +92,7 @@ def requires_auth(permission=''):
         @wraps(f)
         def wrapper(*args, **kwargs):
             token = get_token_auth_header()
-            try:
-                payload = verify_decode_jwt(token)
-            except:
-                abort(401)
+            payload = verify_decode_jwt(token)
             check_permissions(permission, payload)
             return f(payload, *args, **kwargs)
 
