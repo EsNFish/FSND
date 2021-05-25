@@ -17,7 +17,7 @@ def get_token_auth_header():
 
     auth_header = request.headers['Authorization']
     header_parts = auth_header.split(' ')
-    print(header_parts)
+
     if len(header_parts) != 2:
         abort(401, 'Malformed header')
     elif header_parts[0].lower() != 'bearer':
