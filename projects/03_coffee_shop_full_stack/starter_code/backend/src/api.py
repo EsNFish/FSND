@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
 from sqlalchemy.exc import IntegrityError
 
-from .auth.auth import requires_auth
+from .auth.auth import requires_auth, AuthError
 from .database.models import db_drop_and_create_all, setup_db, Drink
 
 app = Flask(__name__)
@@ -71,7 +71,8 @@ def update_drink(auth_token, drink_id):
     if 'title' in drink_data:
         patched_drink.title = drink_data['title']
     if 'recipe' in drink_data:
-        patched_drink.recipe = json.dumps(drink_data['recipe'])
+        recipe = drink_data['recipe']
+        patched_drink.recipe = recipe if type(recipe) == str else json.dumps(recipe)
 
     patched_drink.update()
 
@@ -97,33 +98,6 @@ def delete_drink(auth_token, drink_id):
 
 
 # Error Handling
-@app.errorhandler(400)
-def handle_400(error):
-    return jsonify({
-        "success": False,
-        "error": 400,
-        "message": error.description
-    }), 400
-
-
-@app.errorhandler(401)
-def handle_401(error):
-    return jsonify({
-        "success": False,
-        "error": 401,
-        "message": error.description
-    }), 401
-
-
-@app.errorhandler(403)
-def handle_403(error):
-    return jsonify({
-        "success": False,
-        "error": 403,
-        "message": error.description
-    }), 403
-
-
 @app.errorhandler(404)
 def handle_404(error):
     return jsonify({
@@ -140,3 +114,12 @@ def handle_422(error):
         "error": 422,
         "message": error.description
     }), 422
+
+
+@app.errorhandler(AuthError)
+def handle_auth_error(error):
+    return jsonify({
+        "success": False,
+        "error": error.status_code,
+        "message": error.error
+    }), error.status_code
