@@ -20,7 +20,7 @@ RecipeItemLong = {
             "type": "integer"
         },
         "name": {
-            "type": "String"
+            "type": "string"
         }
     }
 }
@@ -49,6 +49,21 @@ DrinkLong = {
         "id": {
             "type": "integer"
         },
+        "recipe": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/RecipeItemLong"
+            }
+        },
+        "title": {
+            "type": "string"
+        }
+    }
+}
+
+DrinkLongNoId = {
+    "type": "object",
+    "properties": {
         "recipe": {
             "type": "array",
             "items": {

@@ -6,8 +6,10 @@ from sqlalchemy.exc import IntegrityError
 from flasgger import Swagger, swag_from
 from backend.src.swagger.specs.get_drink_spec import get_drink_specs
 from backend.src.swagger.specs.get_drink_detials_specs import get_drink_details_specs
+from backend.src.swagger.specs.post_drink_spec import post_drink_specs
 from .auth.auth import requires_auth, AuthError
 from .database.models import db_drop_and_create_all, setup_db, Drink
+
 
 app = Flask(__name__)
 setup_db(app)
@@ -21,9 +23,7 @@ db_drop_and_create_all()
 @app.route('/drinks')
 @swag_from(get_drink_specs)
 def get_drinks():
-    """Public endpoint to get all available drinks
-    ---
-    """
+    """Public endpoint to get all available drinks"""
     available_drinks = [drink.short() for drink in Drink.query.all()]
     return jsonify({
         "success": True,
@@ -35,9 +35,7 @@ def get_drinks():
 @requires_auth('get:drinks-detail')
 @swag_from(get_drink_details_specs)
 def get_drink_details(auth_token):
-    """Endpoint for Baristas and Managers to get detailed info about drinks
-
-    """
+    """Endpoint for Baristas and Managers to get detailed info about drinks"""
     available_drinks_details = [drink.long() for drink in Drink.query.all()]
     return jsonify({
         "success": True,
@@ -47,7 +45,9 @@ def get_drink_details(auth_token):
 
 @app.route('/drinks', methods=['POST'])
 @requires_auth('post:drinks')
+@swag_from(post_drink_specs)
 def post_drink(auth_token):
+    """Endpoint for manager to add a new drink"""
     data = request.json
 
     if 'title' not in data or 'recipe' not in data:
