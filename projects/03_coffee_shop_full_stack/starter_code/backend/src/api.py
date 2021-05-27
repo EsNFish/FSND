@@ -5,7 +5,7 @@ from flask_cors import CORS
 from sqlalchemy.exc import IntegrityError
 from flasgger import Swagger, swag_from
 from backend.src.swagger.specs.get_drink_spec import get_drink_specs
-
+from backend.src.swagger.specs.get_drink_detials_specs import get_drink_details_specs
 from .auth.auth import requires_auth, AuthError
 from .database.models import db_drop_and_create_all, setup_db, Drink
 
@@ -33,7 +33,11 @@ def get_drinks():
 
 @app.route('/drinks-detail')
 @requires_auth('get:drinks-detail')
+@swag_from(get_drink_details_specs)
 def get_drink_details(auth_token):
+    """Endpoint for Baristas and Managers to get detailed info about drinks
+
+    """
     available_drinks_details = [drink.long() for drink in Drink.query.all()]
     return jsonify({
         "success": True,

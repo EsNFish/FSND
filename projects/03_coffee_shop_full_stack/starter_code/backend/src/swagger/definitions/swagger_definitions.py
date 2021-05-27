@@ -1,4 +1,4 @@
-RecipeItem = {
+RecipeItemShort = {
     "type": "object",
     "properties": {
         "color": {
@@ -10,7 +10,22 @@ RecipeItem = {
     }
 }
 
-Drink = {
+RecipeItemLong = {
+    "type": "object",
+    "properties": {
+        "color": {
+            "type": "string"
+        },
+        "parts": {
+            "type": "integer"
+        },
+        "name": {
+            "type": "String"
+        }
+    }
+}
+
+DrinkShort = {
     "type": "object",
     "properties": {
         "id": {
@@ -19,7 +34,7 @@ Drink = {
         "recipe": {
             "type": "array",
             "items": {
-                "$ref": "#/definitions/RecipeItem"
+                "$ref": "#/definitions/RecipeItemShort"
             }
         },
         "title": {
@@ -28,7 +43,25 @@ Drink = {
     }
 }
 
-Response = {
+DrinkLong = {
+    "type": "object",
+    "properties": {
+        "id": {
+            "type": "integer"
+        },
+        "recipe": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/RecipeItemLong"
+            }
+        },
+        "title": {
+            "type": "string"
+        }
+    }
+}
+
+ResponseShort = {
     "type": "object",
     "properties": {
         "success": {
@@ -37,7 +70,22 @@ Response = {
         "drinks": {
             "type": "array",
             "items": {
-                "$ref": "#/definitions/Drink"
+                "$ref": "#/definitions/DrinkShort"
+            }
+        }
+    }
+}
+
+ResponseLong = {
+    "type": "object",
+    "properties": {
+        "success": {
+            "type": "boolean"
+        },
+        "drinks": {
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/DrinkLong"
             }
         }
     }
