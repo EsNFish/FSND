@@ -4,6 +4,7 @@ post_drink_specs = {
     "parameters": [
         {
             "name": "drink",
+            "description": "Need both recipe and title to create",
             "in": "body",
             "type": "object",
             "schema": {
@@ -16,7 +17,7 @@ post_drink_specs = {
         "RecipeItemLong": RecipeItemLong,
         "DrinkLong": DrinkLong,
         "DrinkLongNoId": DrinkLongNoId,
-        "ResponseLong": ResponseLong
+        "ResponseLong": ResponseLong,
     },
     "responses": {
         "200": {
