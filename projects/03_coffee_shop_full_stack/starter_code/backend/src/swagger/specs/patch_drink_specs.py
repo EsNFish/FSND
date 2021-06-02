@@ -4,6 +4,12 @@ from backend.src.swagger.definitions.swagger_definitions import ResponseLong, Re
 patch_drink_specs = {
     "parameters": [
         {
+            "in": "path",
+            "name": "drink_id",
+            "required": True,
+            "description": "id of drink to update"
+        },
+        {
             "name": "drink",
             "description": "Need at least one title or name to update",
             "in": "body",

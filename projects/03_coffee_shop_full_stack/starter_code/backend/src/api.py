@@ -11,6 +11,7 @@ from backend.src.swagger.specs.get_drink_spec import get_drink_specs
 from backend.src.swagger.specs.post_drink_spec import post_drink_specs
 from .auth.auth import requires_auth, AuthError
 from .database.models import db_drop_and_create_all, setup_db, Drink
+from .swagger.specs.delete_drink_spec import delete_drink_details_specs
 from .swagger.specs.patch_drink_specs import patch_drink_specs
 
 app = Flask(__name__)
@@ -104,8 +105,10 @@ def update_drink(auth_token, drink_id):
 
 
 @app.route('/drinks/<drink_id>', methods=['DELETE'])
+@swag_from(delete_drink_details_specs)
 @requires_auth('delete:drinks')
 def delete_drink(auth_token, drink_id):
+    """Endpoint for manager to delete an existing drink"""
     deleted_drink = Drink.query.filter(Drink.id == drink_id).one_or_none()
 
     if deleted_drink is None:
