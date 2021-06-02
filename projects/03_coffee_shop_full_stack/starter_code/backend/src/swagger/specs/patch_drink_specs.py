@@ -1,5 +1,5 @@
 from backend.src.swagger.definitions.swagger_definitions import ResponseLong, RecipeItemLong, DrinkLong, DrinkLongNoId, \
-    Error400, Error404
+    error_builder
 
 patch_drink_specs = {
     "parameters": [
@@ -24,8 +24,10 @@ patch_drink_specs = {
         "DrinkLong": DrinkLong,
         "DrinkLongNoId": DrinkLongNoId,
         "ResponseLong": ResponseLong,
-        "Error400": Error400,
-        "Error404": Error404
+        "Error400": error_builder(400, "Missing request body"),
+        "Error401": error_builder(401, 'Authentication token has expired'),
+        "Error403": error_builder(403, 'User is missing permissions'),
+        "Error404": error_builder(404, "Drink does not exist")
     },
     "responses": {
         "200": {
@@ -38,6 +40,18 @@ patch_drink_specs = {
             "description": "Error thrown when either no request body at all or request body is empty object",
             "schema": {
                 "$ref": "#/definitions/Error400"
+            }
+        },
+        "401": {
+            "description": "Error when JWT token is expired",
+            "schema": {
+                "$ref": "#/definitions/Error401"
+            }
+        },
+        "403": {
+            "description": "Error when user does not have proper permissions",
+            "schema": {
+                "$ref": "#/definitions/Error403"
             }
         },
         "404": {

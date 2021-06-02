@@ -17,6 +17,9 @@ from .swagger.specs.patch_drink_specs import patch_drink_specs
 app = Flask(__name__)
 setup_db(app)
 CORS(app)
+app.config['SWAGGER'] = {
+    'title': "Coffee Shop"
+}
 swagger = Swagger(app)
 
 db_drop_and_create_all()

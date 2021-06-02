@@ -106,38 +106,22 @@ ResponseLong = {
     }
 }
 
-Error400 = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "integer",
-            "example": 400
-        },
-        "message": {
-            "type": "string",
-            "example": "Missing request body"
-        },
-        "success": {
-            "type": "boolean",
-            "example": False
-        }
-    }
-}
 
-Error404 = {
-    "type": "object",
-    "properties": {
-        "error": {
-            "type": "integer",
-            "example": 404
-        },
-        "message": {
-            "type": "string",
-            "example": "Drink does not exist"
-        },
-        "success": {
-            "type": "boolean",
-            "example": False
+def error_builder(error, message):
+    return {
+        "type": "object",
+        "properties": {
+            "error": {
+                "type": "integer",
+                "example": error
+            },
+            "message": {
+                "type": "string",
+                "example": message
+            },
+            "success": {
+                "type": "boolean",
+                "example": False
+            }
         }
     }
-}
